@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
+from django.views.decorators.csrf import csrf_exempt
 
 # Create your views here.
 
@@ -15,10 +16,12 @@ from django.http import HttpResponse, HttpResponseRedirect
 # SessionMiddleware manages sessions across requests.
 # AuthenticationMiddleware associates users with requests using sessions.
 
+@csrf_exempt
 def home(request):
-    users = User.objects.all() 
-    return HttpResponseRedirect('/')
+    # users = User.objects.all() 
+    return HttpResponse('<h1>taufeeq</h1>')
 
+@csrf_exempt
 def signup(request):
 
     if request.method == 'POST':
@@ -28,19 +31,23 @@ def signup(request):
         email = request.POST['email']
         password = request.POST['password'] 
 
-        user = User.objects.create(username, email, password) 
+
+        user = User.objects.create_user(username, email, password) 
 
         user.first_name = first_name
         user.last_name = last_name
 
-        user.save()
-
-        messages.success(request, "Your account has been successfully created:)")
-
-        return redirect('signin')
-    return HttpResponseRedirect('/signup')
+        if User.objects.filter(username = username).first():
+            messages.error(request, 'User name already exists')
+            return HttpResponseRedirect('/user/signup/')
+        else:
+            user.save()
+            messages.success(request, "Your account has been successfully created:)")
+            return redirect('signin')
+    return HttpResponseRedirect('/user/signup/')
     
 
+@csrf_exempt
 def signin(request):
     
     if request.method == 'POST':
@@ -55,9 +62,10 @@ def signin(request):
         else:
             messages.error(request, 'Something is went wrong')
             return redirect('signup')
-    return HttpResponseRedirect('/signup') 
+    return HttpResponseRedirect('/user/signup/') 
 
 
+@csrf_exempt
 def signout(request):
     logout(request)
     messages.success(request, 'Successfully logged out') 
