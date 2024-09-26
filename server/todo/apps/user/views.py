@@ -1,9 +1,11 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.hashers import make_password
 from django.contrib import messages
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+import json
 
 # Create your views here.
 
@@ -16,6 +18,10 @@ from django.views.decorators.csrf import csrf_exempt
 # SessionMiddleware manages sessions across requests.
 # AuthenticationMiddleware associates users with requests using sessions.
 
+# In Python, json.loads() is a method from the json module used to parse a JSON-formatted string into a Python dictionary or object.
+
+# json.loads(request.body) takes the request.body (which is a raw JSON string sent by the frontend) and converts it into a Python dictionary.
+
 @csrf_exempt
 def home(request):
     # users = User.objects.all() 
@@ -25,26 +31,40 @@ def home(request):
 def signup(request):
 
     if request.method == 'POST':
-        username = request.POST['username']
-        first_name = request.POST['first_name']
-        last_name = request.POST['last_name']
-        email = request.POST['email']
-        password = request.POST['password'] 
+        # parse JSON body
+        try:
+            print('before json: ',request.body)
+            data = json.loads(request.body)
+            print('after json: ', data)
+            username = data.get('username')
+            first_name = data.get('first_name')
+            last_name = data.get('last_name')
+            email = data.get('email')
+            password = data.get('password') 
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data'}, status = 400)
 
-
-        user = User.objects.create_user(username, email, password) 
-
-        user.first_name = first_name
-        user.last_name = last_name
-
-        if User.objects.filter(username = username).first():
-            messages.error(request, 'User name already exists')
-            return HttpResponseRedirect('/user/signup/')
+        #check if user already exists
+        if not username or not first_name or not last_name or not email or not password:
+            return JsonResponse({'error': 'Please fill all the details'}, status = 400) 
+        elif User.objects.filter(username = username).exists():
+            return JsonResponse({'error': 'This username already exists'}, status = 400)
+        elif User.objects.filter(email = email).exists():
+            return JsonResponse({'error': 'This email address already exists'}, status = 400)
         else:
+            user = User.objects.create(
+                username = username,
+                email = email,
+                password = make_password(password) # hash the password
+            )
+            user.first_name = first_name
+            user.last_name = last_name
             user.save()
-            messages.success(request, "Your account has been successfully created:)")
-            return redirect('signin')
-    return HttpResponseRedirect('/user/signup/')
+
+            # Return success response
+            return JsonResponse({'message': 'Your account has been created successfully'}, status = 200)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status = 405)
     
 
 @csrf_exempt
