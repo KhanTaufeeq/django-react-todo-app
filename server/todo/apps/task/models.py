@@ -12,3 +12,9 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+    
+
+# why do we link an entire User object as a foreign key instead of just user_id ?
+
+# Linking the User object as a foreign key gives you access to the full User instance, provides powerful ORM capabilities, and maintains data integrity.
+# Storing just the user_id would require manual SQL handling, make code more complex, and lose Django’s built-in relationship management features.
