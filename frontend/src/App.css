@@ -45,6 +45,10 @@
   width: 30%;
 }
 
-.home-div{
-  display: flex;
+#plus-img {
+  width: 4vw;
 }
+
+/* .home-div{
+  display: flex;
+} */

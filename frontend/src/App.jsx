@@ -7,7 +7,6 @@ function App() {
   return (
     <>
       <div className="home-div">
-        <Home/>
         <Router/>
       </div>
     </>

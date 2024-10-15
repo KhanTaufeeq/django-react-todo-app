@@ -1,13 +1,16 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, json } from "react-router-dom";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Home from "../Home";
 
 function Signin() {
 
   const [userSigninName, setUserSigninName] = useState('')
   const [userSigninPassword, setUserSigninPassword] = useState('')
+  const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
+  
 
   const userSignIn = (event) => {
     console.log('submitting form');
@@ -24,13 +27,20 @@ function Signin() {
       }
     )
       .then(res => {
+        console.log(res.data.user_id);
         console.log('signin response: ', userSigninName);
+        localStorage.setItem('user_id', JSON.stringify(res.data.user_id));
+        setUserId(res.data.user_id);
         navigate('mytask');
       })
       .catch(err => {
         console.log(err);
       });
   }
+
+  // React's useState updates the state asynchronously, 
+  // meaning that userId may not yet be updated by the time localStorage.setItem('user_id', JSON.stringify(userId)) is called. 
+  // At that moment, userId may still be null.
 
   // const routeToHomeTask = () => {
   //   console.log(userSigninName);
@@ -41,6 +51,7 @@ function Signin() {
 
   return (
     <>
+    <Home/>
       <div className="signin-div">
         <h2>Let's Schedule</h2>
         <div className="input-div">
